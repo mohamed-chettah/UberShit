@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -14,29 +15,18 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json([
-                'message' => 'Invalid login credentials'
-            ], 401);
+
+        if (!$token = JWTAuth::attempt($request->only('email', 'password'))) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        $user = Auth::user();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user,
-            'status' => 'Login successful',
-        ]);
+        return response()->json(['token' => $token]);
     }
 
     public function destroy(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        JWTAuth::invalidate(JWTAuth::getToken());
 
-        return response()->json([
-            'message' => 'Logout successful'
-        ]);
+        return response()->json(['message' => 'Successfully logged out']);
     }
 }

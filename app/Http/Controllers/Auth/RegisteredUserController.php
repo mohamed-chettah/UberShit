@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class RegisteredUserController extends Controller
 {
@@ -20,40 +21,36 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request)
     {
-
-        try {
-            $request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-                'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            ]);
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'role' => ['string', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        try {
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'user'
+            ]);
 
-        event(new Registered($user));
+            event(new Registered($user));
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+            // Génération du token JWT
+            $token = JWTAuth::fromUser($user);
 
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user
-        ]);
-
-        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Invalid registration credentials '. $e->getMessage()
-            ], 401);
-        }
+                'token' => $token,
+                'user' => $user
+            ], 201);
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Invalid registration credentials '. $e->getMessage()
+                ], 401);
+            }
     }
 }
