@@ -4,4 +4,7 @@ export default defineNuxtConfig({
   modules: ["@nuxt/ui", "@pinia/nuxt"],
   compatibilityDate: "2024-10-27",
   pages: true,
+  routeRules: {
+    '/api/**': {proxy: {to: process.env.CALLXHR + '/**'}},
+  }
 })

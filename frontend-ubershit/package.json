@@ -16,6 +16,7 @@
     "nuxt": "^3.13.2"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.1.5",
     "zod": "^3.23.8"
   },
   "overrides": {

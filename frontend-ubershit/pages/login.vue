@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { z } from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
+import {useUserStore} from "~/store/userStore";
 
 const schema = z.object({
-  email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Must be at least 8 characters')
+  email: z.string().email('Invalid email')
 })
 
 type Schema = z.output<typeof schema>
+const userStore = useUserStore()
 
 const state = reactive({
   email: undefined,
@@ -15,23 +16,24 @@ const state = reactive({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  // Do something with data
+  await userStore.fetchCsrfToken()
   console.log(event.data)
+  await userStore.login(event.data)
 }
 </script>
 
 <template>
-  <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+  <UForm :schema="schema" :state="state" class="flex flex-col mt-20 justify-center items-center space-y-4" @submit="onSubmit">
     <UFormGroup label="Email" name="email">
       <UInput v-model="state.email" />
     </UFormGroup>
 
-    <UFormGroup label="Password" name="password">
+    <UFormGroup label="Mot de passe" name="password">
       <UInput v-model="state.password" type="password" />
     </UFormGroup>
 
     <UButton type="submit">
-      Submit
+      Se connecter
     </UButton>
   </UForm>
 </template>
