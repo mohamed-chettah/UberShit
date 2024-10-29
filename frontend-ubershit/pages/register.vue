@@ -4,7 +4,8 @@ import type { FormSubmitEvent } from '#ui/types'
 import {useUserStore} from "~/store/userStore";
 
 const schema = z.object({
-  email: z.string().email('Invalid email')
+  email: z.string().email('Invalid email'),
+  role: z.string().min(1, 'Enter a role')
 })
 
 type Schema = z.output<typeof schema>
@@ -19,8 +20,18 @@ const state = reactive({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-
-  await userStore.login(event.data)
+  if (state.password !== state.passwordConfirmation) {
+    alert('Les mots de passe ne correspondent pas.')
+    return
+  }
+  let body = {
+    name: state.name,
+    email: state.email,
+    password: state.password,
+    password_confirmation: state.passwordConfirmation,
+    role: state.role
+  }
+  await userStore.register(body)
 }
 
 const roles = [{
@@ -38,6 +49,7 @@ const roles = [{
 <template>
   <div class="flex flex-col items-center justify-center mt-10">
     <h1 class="text-4xl font-bold">Inscription</h1>
+
     <UForm :schema="schema" :state="state" class="flex flex-col mt-20 justify-center items-center space-y-4" @submit="onSubmit">
       <UFormGroup label="Nom" name="email">
         <UInput v-model="state.name" />
@@ -45,10 +57,6 @@ const roles = [{
 
       <UFormGroup label="Email" name="email">
         <UInput v-model="state.email" />
-      </UFormGroup>
-
-      <UFormGroup label="Role" name="role">
-        <USelect v-model="state.role" :options="roles" option-attribute="name" />
       </UFormGroup>
 
       <UFormGroup label="Mot de passe" name="password">
@@ -59,7 +67,10 @@ const roles = [{
         <UInput v-model="state.passwordConfirmation" type="password" />
       </UFormGroup>
 
-      <UButton type="submit">
+      <USelect v-model="state.role" :options="roles" option-attribute="name" class="w-full"
+               variant="outline"   placeholder="Votre rôle..."/>
+
+      <UButton type="submit" :loading="userStore.loading">
         S'inscrire
       </UButton>
     </UForm>

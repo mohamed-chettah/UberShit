@@ -50,8 +50,6 @@ export const useUserStore = defineStore('user', () => {
             onBeforeMount(() => {
                 localStorage.setItem('authToken', token.value);
             })
-
-
         } catch (error) {
             errorMessage.value = error.message || 'Login failed';
         } finally {
