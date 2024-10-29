@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import Navbar from "~/components/Navbar.vue";
+import {useUserStore} from "~/store/userStore.js";
+
+const userStore = useUserStore()
+if (userStore.csrfToken === null){
+  userStore.fetchCsrfToken()
+
+}
 </script>
 
 <template>

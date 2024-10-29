@@ -24,6 +24,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <UForm :schema="schema" :state="state" class="flex flex-col mt-20 justify-center items-center space-y-4" @submit="onSubmit">
+    <h1 class="text-4xl font-bold">Connexion</h1>
+    <UFormGroup label="Nom" name="name">
+      <UInput v-model="state.email" />
+    </UFormGroup>
+
+
     <UFormGroup label="Email" name="email">
       <UInput v-model="state.email" />
     </UFormGroup>
@@ -35,6 +41,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     <UButton type="submit">
       Se connecter
     </UButton>
+    <div class="flex">
+      <p>Vous n'ètes pas inscrit : <a href="/register" class="text-primary"> Inscrivez vous </a> </p>
+
+    </div>
   </UForm>
+
+
+
 </template>
 
