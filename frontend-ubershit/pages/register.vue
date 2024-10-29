@@ -14,13 +14,25 @@ const state = reactive({
   name: undefined,
   email: undefined,
   password: undefined,
-  passwordConfirmation: undefined
+  passwordConfirmation: undefined,
+  role: undefined
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
 
   await userStore.login(event.data)
 }
+
+const roles = [{
+  name: 'Client',
+  value: 'client'
+}, {
+  name: 'Chef',
+  value: 'chef',
+}, {
+  name: 'Livreur',
+  value: 'livreur'
+}]
 
 </script>
 <template>
@@ -33,6 +45,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
       <UFormGroup label="Email" name="email">
         <UInput v-model="state.email" />
+      </UFormGroup>
+
+      <UFormGroup label="Role" name="role">
+        <USelect v-model="state.role" :options="roles" option-attribute="name" />
       </UFormGroup>
 
       <UFormGroup label="Mot de passe" name="password">
