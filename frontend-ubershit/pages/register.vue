@@ -68,7 +68,7 @@ const roles = [{
       </UFormGroup>
 
       <USelect v-model="state.role" :options="roles" option-attribute="name" class="w-full"
-               variant="outline"   placeholder="Votre rôle..."/>
+               variant="outline"   placeholder="Votre rôle..." required/>
 
       <UButton type="submit" :loading="userStore.loading">
         S'inscrire

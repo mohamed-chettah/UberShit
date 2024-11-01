@@ -43,6 +43,9 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
         ->middleware('guest')
         ->name('login');
 
+    Route::get('/me', function (Request $request) {
+        return $request->user();
+    })->middleware('auth');
 
     Route::get('/csrf-token', function () {
         return response()->json(['csrf_token' => csrf_token()]);

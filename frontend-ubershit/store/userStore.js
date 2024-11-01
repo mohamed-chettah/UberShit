@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { useFetch } from '#app';
+import { useFetch, navigateTo, useCookie } from '#app';
 
 export const useUserStore = defineStore('user', () => {
     const user = ref(null);
@@ -8,6 +8,12 @@ export const useUserStore = defineStore('user', () => {
     const csrfToken = ref(null);  // Stockage du CSRF token
     const loading = ref(false);
     const errorMessage = ref('');
+    const isAuthInitialized = ref(false); // Indique si l'authentification est prête
+
+    // Utiliser useCookie pour gérer les cookies
+    const authTokenCookie = useCookie('authToken');
+    const authUserCookie = useCookie('authUser');
+    const csrfTokenCookie = useCookie('csrfToken');
 
     // Action pour récupérer le CSRF token depuis Laravel
     const fetchCsrfToken = async () => {
@@ -21,6 +27,7 @@ export const useUserStore = defineStore('user', () => {
             }
 
             csrfToken.value = data.value.csrf_token;
+            csrfTokenCookie.value = csrfToken.value; // Stockage du CSRF token dans les cookies
         } catch (error) {
             console.error("Error fetching CSRF token:", error);
             errorMessage.value = "Unable to fetch CSRF token";
@@ -36,7 +43,7 @@ export const useUserStore = defineStore('user', () => {
                 method: 'POST',
                 body: credentials,
                 headers: {
-                    'X-CSRF-TOKEN': csrfToken.value, // Ajout du CSRF token dans les headers
+                    'X-CSRF-TOKEN': csrfToken.value || csrfTokenCookie.value, // Ajout du CSRF token dans les headers
                 },
             });
 
@@ -44,12 +51,14 @@ export const useUserStore = defineStore('user', () => {
                 throw new Error(error.value.message);
             }
 
-            await navigateTo('/dashboard')
             token.value = data.value.token;
             user.value = data.value.user;
-            onBeforeMount(() => {
-                localStorage.setItem('authToken', token.value);
-            })
+
+            // Stockage dans les cookies
+            authTokenCookie.value = token.value; // Expire dans 7 jours par défaut
+            authUserCookie.value = JSON.stringify(user.value);
+
+            await navigateTo('/dashboard');
         } catch (error) {
             errorMessage.value = error.message || 'Login failed';
         } finally {
@@ -62,11 +71,14 @@ export const useUserStore = defineStore('user', () => {
         loading.value = true;
         errorMessage.value = '';
         try {
+            if (!csrfToken.value) {
+                await fetchCsrfToken();
+            }
             const { data, error } = await useFetch('/api/register', {
                 method: 'POST',
                 body: credentials,
                 headers: {
-                    'X-CSRF-TOKEN': csrfToken.value, // Ajout du CSRF token dans les headers
+                    'X-CSRF-TOKEN': csrfToken.value || csrfTokenCookie.value, // Ajout du CSRF token dans les headers
                 },
             });
 
@@ -76,10 +88,12 @@ export const useUserStore = defineStore('user', () => {
 
             token.value = data.value.token;
             user.value = data.value.user;
-            onBeforeMount(() => {
-                localStorage.setItem('authToken', token.value);
-            })
 
+            // Stockage dans les cookies
+            authTokenCookie.value = token.value;
+            authUserCookie.value = JSON.stringify(user.value);
+
+            await navigateTo('/dashboard');
         } catch (error) {
             errorMessage.value = error.message || 'Registration failed';
         } finally {
@@ -91,26 +105,41 @@ export const useUserStore = defineStore('user', () => {
     const logout = () => {
         token.value = null;
         user.value = null;
-        onBeforeMount(() => {
-            localStorage.removeItem('authToken');
-        })
 
+        // Suppression des cookies
+        authTokenCookie.value = null;
+        authUserCookie.value = null;
+        csrfTokenCookie.value = null;
+
+        navigateTo('/login');
     };
 
     // Initialiser l'authentification
-    const initAuth = () => {
-        let savedToken;
-        onBeforeMount(() => {
-             savedToken = localStorage.getItem('authToken');
-        })
+    const initAuth = async () => {
+        const savedToken = authTokenCookie.value;
+        const savedUser = authUserCookie.value;
 
+        console.log("savedToken", savedToken);
+        console.log("savedUser", savedUser);
+
+        if (savedUser) {
+            user.value = savedUser;
+        }
         if (savedToken) {
             token.value = savedToken;
-            // Appel à l'API pour récupérer les infos du user via le token (optionnel)
-            // Exemple: fetchUserData();
         }
-        // Récupère le CSRF token dès l'initialisation
-        fetchCsrfToken();
+
+        // Récupérer le CSRF token dès l'initialisation si nécessaire
+        if (!csrfToken.value) {
+            const savedCsrfToken = csrfTokenCookie.value;
+            if (savedCsrfToken) {
+                csrfToken.value = savedCsrfToken;
+            } else {
+                await fetchCsrfToken();
+            }
+        }
+
+        isAuthInitialized.value = true; // Authentification initialisée
     };
 
     // Vérifier si l'utilisateur est authentifié
@@ -127,10 +156,12 @@ export const useUserStore = defineStore('user', () => {
         csrfToken,
         loading,
         errorMessage,
+        isAuthInitialized,
         login,
         register,
         logout,
         isAuthenticated,
         fetchCsrfToken,
+        initAuth,
     };
 });

@@ -5,8 +5,10 @@
       <list>
         <option value="$PROJECT_DIR$/tests/Unit" />
         <option value="$PROJECT_DIR$/tests/Feature" />
-        <option value="$PROJECT_DIR$/service-kitchen/tests" />
-        <option value="$PROJECT_DIR$/service-user/tests" />
+        <option value="$PROJECT_DIR$/service-kitchen/tests/Unit" />
+        <option value="$PROJECT_DIR$/service-kitchen/tests/Feature" />
+        <option value="$PROJECT_DIR$/service-user/tests/Unit" />
+        <option value="$PROJECT_DIR$/service-user/tests/Feature" />
       </list>
     </option>
   </component>

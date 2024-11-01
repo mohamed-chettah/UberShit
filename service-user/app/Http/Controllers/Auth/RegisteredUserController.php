@@ -40,6 +40,7 @@ class RegisteredUserController extends Controller
             // Génération du token JWT
             $token = JWTAuth::fromUser($user);
 
+
             return response()->json([
                 'token' => $token,
                 'user' => $user
